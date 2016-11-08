@@ -1,7 +1,14 @@
 const koa = require('koa');
-const staticServe = require('koa-static');
+const koaStatic = require('koa-static');
+const koaRouter = require('koa-router')();
 const app = koa();
 
-app.use(staticServe('./public'));
+app.use(koaStatic('./public'));
+
+koaRouter.post('/syncData', function *(next) {
+  this.body = 'OK!';
+});
+
+app.use(koaRouter.routes()).use(koaRouter.allowedMethods());
 
 app.listen(3000);
