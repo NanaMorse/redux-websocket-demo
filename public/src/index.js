@@ -1,5 +1,4 @@
 const redux = require('redux');
-const dataStore = require('./dataStore');
 
 // action Types
 const SEND_MSG = 'SEND_MSG';
@@ -35,36 +34,43 @@ function reducer(currentState, action) {
 }
 
 // init store
-const store = redux.createStore(reducer, dataStore);
+// fetch dataStore from server
+fetch('../dataStore.json')
+  .then(response => response.json())
+  .then((data) => {
+    const store = redux.createStore(reducer, data);
 
-// fill page with store data
-function fillMsgList(msgList) {
-  const msgListContainer = document.querySelector('#msgListContainer');
-  let liString = '';
-  msgList.forEach((listInfo) => {
-    liString += `<li>${listInfo.from}: ${listInfo.msg}</li>`;
-  });
-  msgListContainer.innerHTML = liString;
-}
+    // fill page with store data
+    function fillMsgList(msgList) {
+      const msgListContainer = document.querySelector('#msgListContainer');
+      let liString = '';
+      msgList.forEach((listInfo) => {
+        liString += `<li>${listInfo.from}: ${listInfo.msg}</li>`;
+      });
+      msgListContainer.innerHTML = liString;
+    }
 
-fillMsgList(store.getState().msgList);
+    fillMsgList(store.getState().msgList);
 
-store.subscribe(function () {
-  fillMsgList(store.getState().msgList)
-});
+    store.subscribe(function () {
+      fillMsgList(store.getState().msgList)
+    });
 
 // bind dispatch event
-function sendEditorMsg() {
-  const msgEditor = document.querySelector('#msgEditor');
-  if (!msgEditor.value) return;
+    function sendEditorMsg() {
+      const msgEditor = document.querySelector('#msgEditor');
+      if (!msgEditor.value) return;
 
-  store.dispatch(sendMsg(msgEditor.value));
+      store.dispatch(sendMsg(msgEditor.value));
 
-  msgEditor.value = '';
-}
+      msgEditor.value = '';
+      
+      console.log(JSON.stringify(store.getState()))
+    }
 
-document.querySelector('#sendMsg').addEventListener('click', sendEditorMsg);
-document.querySelector('#msgEditor').addEventListener('keydown', function (e) {
-  if (e.keyCode === 13) sendEditorMsg();
-});
+    document.querySelector('#sendMsg').addEventListener('click', sendEditorMsg);
+    document.querySelector('#msgEditor').addEventListener('keydown', function (e) {
+      if (e.keyCode === 13) sendEditorMsg();
+    });
+  });
 

@@ -1,0 +1,14 @@
+{
+  "msgList": [
+    {
+      "from": "unknown user",
+      "msg": "Hello",
+      "date": "Tue Nov 08 2016"
+    },
+    {
+      "from": "unknown user",
+      "msg": "World",
+      "date": "Tue Nov 08 2016"
+    }
+  ]
+}
