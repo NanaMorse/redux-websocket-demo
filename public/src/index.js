@@ -47,7 +47,7 @@ function fillMsgList(msgList) {
 
 // init store
 // fetch dataStore from server
-fetch('../dataStore.json').then(response => response.json()).then((data) => {
+fetch('/getData').then(response => response.json()).then((data) => {
   const store = redux.createStore(reducer, data);
 
   fillMsgList(store.getState().msgList);
