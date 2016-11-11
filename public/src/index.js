@@ -79,4 +79,6 @@ fetch('/getData').then(response => response.json()).then((data) => {
   }
 });
 
+new WebSocket('ws://localhost:3000')
+
 

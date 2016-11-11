@@ -3,6 +3,7 @@ const koaStatic = require('koa-static');
 const koaRouter = require('koa-router')();
 const koaBodyParser = require('koa-body-parser');
 const app = koa();
+const WebSocketServer = require('ws').Server;
 
 const fs = require('fs');
 
@@ -24,8 +25,13 @@ koaRouter.post('/syncData', function *(next) {
   });
 
   // todo broadcast store update websocket message to every connection
+
 });
 
 app.use(koaRouter.routes()).use(koaRouter.allowedMethods());
 
-app.listen(3000);
+const wss = new WebSocketServer({server: app.listen(3000)});
+
+wss.on('connection', function () {
+  console.log('hello websocket!');
+});
