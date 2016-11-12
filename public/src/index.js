@@ -1,19 +1,25 @@
 const redux = require('redux');
-
 const ws = new WebSocket('ws://localhost:3000');
+
+let store;
 
 ws.onmessage = function (msg) {
   const parsedData = JSON.parse(msg.data);
 
   switch (parsedData.type) {
     case 'getData': {
-      return initPage(JSON.parse(parsedData.data));
+      return store = initPage(JSON.parse(parsedData.data));
+    }
+
+    case 'updateData': {
+      return dispatchUpdateStore(parsedData.data);
     }
   }
 };
 
 // action Types
 const SEND_MSG = 'SEND_MSG';
+const UPDATE_STORE = 'UPDATE_STORE';
 
 // actions
 function sendMsg(msg, from = 'unknown user') {
@@ -24,13 +30,19 @@ function sendMsg(msg, from = 'unknown user') {
   }
 }
 
+function updateStore(storeData) {
+  return {
+    type: UPDATE_STORE,
+    data: storeData
+  }
+}
+
 // reducer
 function reducer(currentState, action) {
   const stateCopy = JSON.parse(JSON.stringify(currentState));
 
   switch (action.type) {
-    case SEND_MSG :
-    {
+    case SEND_MSG: {
       stateCopy.msgList.push({
         from: action.from,
         msg: action.msg,
@@ -40,8 +52,11 @@ function reducer(currentState, action) {
       return stateCopy;
     }
 
-    default :
-    {
+    case UPDATE_STORE: {
+      return action.data
+    }
+
+    default: {
       return currentState;
     }
   }
@@ -63,6 +78,22 @@ function initPage(storeData) {
 
   fillMsgList(store.getState().msgList);
 
+  document.querySelector('#sendMsg').addEventListener('click', sendEditorMsg);
+  document.querySelector('#msgEditor').addEventListener('keydown', function (e) {
+    if (e.keyCode === 13) sendEditorMsg();
+  });
+
+  return store;
+
+  function syncStoreData() {
+    const sendMsg = {
+      type: 'syncData',
+      data: JSON.stringify(store.getState())
+    };
+
+    ws.send(JSON.stringify(sendMsg));
+  }
+
   // dispatch event
   function sendEditorMsg() {
     const msgEditor = document.querySelector('#msgEditor');
@@ -76,18 +107,12 @@ function initPage(storeData) {
 
     msgEditor.value = '';
   }
-  document.querySelector('#sendMsg').addEventListener('click', sendEditorMsg);
-  document.querySelector('#msgEditor').addEventListener('keydown', function (e) {
-    if (e.keyCode === 13) sendEditorMsg();
-  });
+}
 
-  function syncStoreData() {
-    const sendMsg = {
-      type: 'syncData',
-      data: JSON.stringify(store.getState())
-    };
-
-    ws.send(JSON.stringify(sendMsg));
-  }
+// update store
+function dispatchUpdateStore(storeData) {
+  const parsedStoreData = JSON.parse(storeData);
+  store.dispatch(updateStore(parsedStoreData));
+  fillMsgList(parsedStoreData.msgList);
 }
 

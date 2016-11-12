@@ -20,6 +20,15 @@ function syncData(storeData) {
   });
 }
 
+function broadcastStoreData(ws, storeData) {
+  wss.clients.forEach((client) => {
+    if (client !== ws) client.send(JSON.stringify({
+      type: 'updateData',
+      data: storeData
+    }));
+  });
+}
+
 wss.on('connection', function (ws) {
 
   ws.send(JSON.stringify({
@@ -33,7 +42,9 @@ wss.on('connection', function (ws) {
 
     switch (parsedMsg.type) {
       case 'syncData': {
-        return syncData(parsedMsg.data);
+        syncData(parsedMsg.data);
+        broadcastStoreData(ws, parsedMsg.data);
+        return;
       }
     }
   });
