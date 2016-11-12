@@ -74,6 +74,7 @@ function fillMsgList(msgList) {
 
 // init store
 function initPage(storeData) {
+  // todo: add middleware to handle dispatch info and send it to server
   const store = redux.createStore(reducer, storeData);
 
   fillMsgList(store.getState().msgList);
@@ -85,6 +86,7 @@ function initPage(storeData) {
 
   return store;
 
+  // todo: sync store data and dispatch info
   function syncStoreData() {
     const sendMsg = {
       type: 'syncData',

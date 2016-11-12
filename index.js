@@ -20,6 +20,7 @@ function syncData(storeData) {
   });
 }
 
+// todo: only broadcast dispatch info
 function broadcastStoreData(ws, storeData) {
   wss.clients.forEach((client) => {
     if (client !== ws) client.send(JSON.stringify({
