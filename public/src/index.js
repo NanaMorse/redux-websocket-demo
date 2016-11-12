@@ -1,5 +1,17 @@
 const redux = require('redux');
 
+const ws = new WebSocket('ws://localhost:3000');
+
+ws.onmessage = function (msg) {
+  const parsedData = JSON.parse(msg.data);
+
+  switch (parsedData.type) {
+    case 'getData': {
+      return initPage(JSON.parse(parsedData.data));
+    }
+  }
+};
+
 // action Types
 const SEND_MSG = 'SEND_MSG';
 
@@ -46,9 +58,8 @@ function fillMsgList(msgList) {
 }
 
 // init store
-// fetch dataStore from server
-fetch('/getData').then(response => response.json()).then((data) => {
-  const store = redux.createStore(reducer, data);
+function initPage(storeData) {
+  const store = redux.createStore(reducer, storeData);
 
   fillMsgList(store.getState().msgList);
 
@@ -70,15 +81,13 @@ fetch('/getData').then(response => response.json()).then((data) => {
     if (e.keyCode === 13) sendEditorMsg();
   });
 
-  // sync store data to server
   function syncStoreData() {
-    fetch('/syncData', {
-      method: 'post',
-      body: JSON.stringify(store.getState())
-    });
+    const sendMsg = {
+      type: 'syncData',
+      data: JSON.stringify(store.getState())
+    };
+
+    ws.send(JSON.stringify(sendMsg));
   }
-});
-
-new WebSocket('ws://localhost:3000')
-
+}
 

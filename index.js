@@ -1,7 +1,5 @@
 const koa = require('koa');
 const koaStatic = require('koa-static');
-const koaRouter = require('koa-router')();
-const koaBodyParser = require('koa-body-parser');
 const app = koa();
 const WebSocketServer = require('ws').Server;
 
@@ -9,29 +7,34 @@ const fs = require('fs');
 
 app.use(koaStatic('./public'));
 
-app.use(koaBodyParser());
+const wss = new WebSocketServer({server: app.listen(3000)});
 
-koaRouter.get('/getData', function *() {
-  this.body = fs.readFileSync('./dataStore.json', 'utf-8')
-});
+function getStoreData() {
+  return fs.readFileSync('./dataStore.json', 'utf-8');
+}
 
-koaRouter.post('/syncData', function *(next) {
-  this.body = 'OK!';
-
-  // update remote store data
-  fs.writeFile('./dataStore.json', this.request.body, function (err) {
+function syncData(storeData) {
+  fs.writeFile('./dataStore.json', storeData, function (err) {
     if (err) throw err;
     console.log('write ok!');
   });
+}
 
-  // todo broadcast store update websocket message to every connection
+wss.on('connection', function (ws) {
 
-});
+  ws.send(JSON.stringify({
+    type: 'getData',
+    data: getStoreData()
+  }));
 
-app.use(koaRouter.routes()).use(koaRouter.allowedMethods());
+  ws.on('message', function (msg) {
 
-const wss = new WebSocketServer({server: app.listen(3000)});
+    const parsedMsg = JSON.parse(msg);
 
-wss.on('connection', function () {
-  console.log('hello websocket!');
+    switch (parsedMsg.type) {
+      case 'syncData': {
+        return syncData(parsedMsg.data);
+      }
+    }
+  });
 });
