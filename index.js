@@ -20,12 +20,15 @@ function syncData(storeData) {
   });
 }
 
-// todo: only broadcast dispatch info
-function broadcastStoreData(ws, storeData) {
+function broadcastActionData(ws, actionData) {
+
+  const parsedActionData = JSON.parse(actionData);
+  parsedActionData._isBroadcast = true;
+
   wss.clients.forEach((client) => {
     if (client !== ws) client.send(JSON.stringify({
       type: 'updateData',
-      data: storeData
+      data: JSON.stringify(parsedActionData)
     }));
   });
 }
@@ -44,8 +47,11 @@ wss.on('connection', function (ws) {
     switch (parsedMsg.type) {
       case 'syncData': {
         syncData(parsedMsg.data);
-        broadcastStoreData(ws, parsedMsg.data);
         return;
+      }
+
+      case 'syncAction': {
+        broadcastActionData(ws, parsedMsg.data);
       }
     }
   });

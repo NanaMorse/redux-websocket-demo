@@ -3,6 +3,20 @@ const ws = new WebSocket('ws://localhost:3000');
 
 let store;
 
+const createWebSocketMiddleware = ws => ({getState, dispatch}) => dispatch => action => {
+
+  dispatch(action);
+
+  if (!action._isBroadcast) {
+    const sendMsg = {
+      type: 'syncAction',
+      data: JSON.stringify(action)
+    };
+
+    ws.send(JSON.stringify(sendMsg));
+  }
+};
+
 ws.onmessage = function (msg) {
   const parsedData = JSON.parse(msg.data);
 
@@ -12,7 +26,8 @@ ws.onmessage = function (msg) {
     }
 
     case 'updateData': {
-      return dispatchUpdateStore(parsedData.data);
+      store.dispatch(JSON.parse(parsedData.data));
+      return fillMsgList(store.getState().msgList);
     }
   }
 };
@@ -74,8 +89,7 @@ function fillMsgList(msgList) {
 
 // init store
 function initPage(storeData) {
-  // todo: add middleware to handle dispatch info and send it to server
-  const store = redux.createStore(reducer, storeData);
+  const store = redux.applyMiddleware(createWebSocketMiddleware(ws))(redux.createStore)(reducer, storeData);
 
   fillMsgList(store.getState().msgList);
 
@@ -86,7 +100,6 @@ function initPage(storeData) {
 
   return store;
 
-  // todo: sync store data and dispatch info
   function syncStoreData() {
     const sendMsg = {
       type: 'syncData',
@@ -109,12 +122,5 @@ function initPage(storeData) {
 
     msgEditor.value = '';
   }
-}
-
-// update store
-function dispatchUpdateStore(storeData) {
-  const parsedStoreData = JSON.parse(storeData);
-  store.dispatch(updateStore(parsedStoreData));
-  fillMsgList(parsedStoreData.msgList);
 }
 
